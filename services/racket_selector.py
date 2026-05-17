@@ -5,12 +5,27 @@ rackets_data = []
 
 def load_rackets():
     global rackets_data
-    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'rackets.csv')
+    # Ищем файл относительно корня проекта, а не текущей директории
+    possible_paths = [
+        os.path.join(os.path.dirname(__file__), '..', 'data', 'rackets.csv'),  # при запуске из корня
+        os.path.join('data', 'rackets.csv'),  # при запуске из /app
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'rackets.csv'),  # абсолютный путь
+    ]
+    
+    file_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            file_path = path
+            break
+    
+    if not file_path:
+        raise FileNotFoundError(f"rackets.csv не найден. Проверял: {possible_paths}")
+    
     with open(file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             rackets_data.append(row)
-    print(f"Загружено {len(rackets_data)} записей инвентаря.")
+    print(f"Загружено {len(rackets_data)} записей инвентаря из {file_path}")
 
 def get_recommendation(answers: dict) -> str:
     # answers keys: style, level, grip, speed, spin, budget, problem, weight
