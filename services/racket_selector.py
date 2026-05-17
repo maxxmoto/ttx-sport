@@ -6,21 +6,41 @@ rackets_data = []
 def load_rackets():
     global rackets_data
     
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)
-    file_path = os.path.join(project_root, 'data', 'rackets.csv')
+    # Пробуем все возможные пути
+    paths = [
+        'data/rackets.csv',
+        '/app/data/rackets.csv',
+        os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', 'rackets.csv')
+    ]
     
-    print(f"Ищу rackets.csv в: {file_path}")
+    file_path = None
+    for path in paths:
+        print(f"Проверяю: {path}")
+        if os.path.exists(path):
+            file_path = path
+            print(f"Найден: {path}")
+            break
     
-    if not os.path.exists(file_path):
-        file_path = os.path.join('data', 'rackets.csv')
-        print(f"Пробую запасной путь: {file_path}")
+    if not file_path:
+        # Если не нашли - создаём файл из захардкоженных данных
+        print("Файл не найден, создаю заново...")
+        os.makedirs('data', exist_ok=True)
+        file_path = 'data/rackets.csv'
+        with open(file_path, 'w', encoding='utf-8', newline='') as f:
+            f.write("type,brand,model,speed_class,speed,spin,control,weight,thickness,price_range,tensor,pimples\n")
+            f.write("base,Butterfly,Timo Boll ALC,OFF,8.5,9.0,7.5,88,,3,,\n")
+            f.write("base,Butterfly,Viscaria,OFF,8.7,8.8,7.8,90,,3,,\n")
+            f.write("base,Stiga,Allround Classic,ALL,6.0,7.0,9.5,82,,1,,\n")
+            f.write("base,DHS,Power G7,OFF,8.0,8.5,7.5,90,,2,,\n")
+            f.write("rubber,Butterfly,Tenergy 05,,,,,2.1,3,1,0\n")
+            f.write("rubber,Butterfly,Rozena,,,,,2.1,2,1,0\n")
+            f.write("rubber,Palio,AK47 Red,,,,,2.0,1,1,0\n")
     
     with open(file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             rackets_data.append(row)
-    print(f"Загружено {len(rackets_data)} записей инвентаря.")
+    print(f"Загружено {len(rackets_data)} записей.")
 
 def get_recommendation(answers: dict) -> str:
     bases = [r for r in rackets_data if r['type'] == 'base']
