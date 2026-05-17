@@ -6,15 +6,13 @@ rackets_data = []
 def load_rackets():
     global rackets_data
     
-    # Определяем корень проекта
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(current_dir)  # на уровень выше services/
+    project_root = os.path.dirname(current_dir)
     file_path = os.path.join(project_root, 'data', 'rackets.csv')
     
     print(f"Ищу rackets.csv в: {file_path}")
     
     if not os.path.exists(file_path):
-        # Запасной вариант - ищем в текущей директории
         file_path = os.path.join('data', 'rackets.csv')
         print(f"Пробую запасной путь: {file_path}")
     
@@ -34,7 +32,6 @@ def get_recommendation(answers: dict) -> str:
     spin_pref = answers.get('spin', '')
     budget = answers.get('budget', '')
 
-    # Фильтрация оснований по уровню
     if 'beginner' in level:
         bases = [b for b in bases if b['speed_class'] in ('ALL', 'ALL+')]
     elif 'semi_pro' in level or 'professional' in level:
@@ -42,32 +39,27 @@ def get_recommendation(answers: dict) -> str:
     else:
         bases = [b for b in bases if b['speed_class'] in ('ALL+', 'OFF-', 'OFF')]
 
-    # По стилю
     if 'defensive' in style:
         bases = [b for b in bases if b['speed_class'] == 'DEF']
     elif 'pimples' in style:
         bases = [b for b in bases if b['speed_class'] in ('ALL', 'DEF')]
 
-    # По скорости
     if 'control' in speed_pref:
         bases.sort(key=lambda x: float(x['control']), reverse=True)
     elif 'max' in speed_pref:
         bases.sort(key=lambda x: float(x['speed']), reverse=True)
 
-    # По вращению
     if 'high' in spin_pref:
         rubbers = [r for r in rubbers if float(r['spin']) >= 8.5]
     elif 'low' in spin_pref:
         rubbers = [r for r in rubbers if float(r['spin']) <= 7.5]
 
-    # Бюджет
     budget_map = {'budget_low': 1, 'budget_medium': 2, 'budget_high': 3, 'budget_unlimited': 99}
     max_price = budget_map.get(budget, 99)
     if max_price < 99:
         bases = [b for b in bases if int(b['price_range']) <= max_price]
         rubbers = [r for r in rubbers if int(r['price_range']) <= max_price]
 
-    # Вес
     weight_pref = answers.get('weight', 'weight_any')
     if 'light' in weight_pref:
         bases = [b for b in bases if int(b.get('weight', 0)) <= 80]
@@ -77,7 +69,7 @@ def get_recommendation(answers: dict) -> str:
         bases = [b for b in bases if int(b.get('weight', 0)) >= 90]
 
     if not bases:
-        return "К сожалению, не удалось подобрать основание под ваши параметры. Попробуйте смягчить требования."
+        return "К сожалению, не удалось подобрать основание под ваши параметры."
     if not rubbers:
         rubbers = [r for r in rackets_data if r['type'] == 'rubber']
 
