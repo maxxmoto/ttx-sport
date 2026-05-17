@@ -5,7 +5,19 @@ rackets_data = []
 
 def load_rackets():
     global rackets_data
-    file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'rackets.csv')
+    
+    # Определяем корень проекта
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(current_dir)  # на уровень выше services/
+    file_path = os.path.join(project_root, 'data', 'rackets.csv')
+    
+    print(f"Ищу rackets.csv в: {file_path}")
+    
+    if not os.path.exists(file_path):
+        # Запасной вариант - ищем в текущей директории
+        file_path = os.path.join('data', 'rackets.csv')
+        print(f"Пробую запасной путь: {file_path}")
+    
     with open(file_path, 'r', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -13,7 +25,6 @@ def load_rackets():
     print(f"Загружено {len(rackets_data)} записей инвентаря.")
 
 def get_recommendation(answers: dict) -> str:
-    # answers keys: style, level, grip, speed, spin, budget, problem, weight
     bases = [r for r in rackets_data if r['type'] == 'base']
     rubbers = [r for r in rackets_data if r['type'] == 'rubber']
 
@@ -28,7 +39,7 @@ def get_recommendation(answers: dict) -> str:
         bases = [b for b in bases if b['speed_class'] in ('ALL', 'ALL+')]
     elif 'semi_pro' in level or 'professional' in level:
         bases = [b for b in bases if b['speed_class'] in ('OFF', 'OFF+')]
-    else: # amateur
+    else:
         bases = [b for b in bases if b['speed_class'] in ('ALL+', 'OFF-', 'OFF')]
 
     # По стилю
@@ -56,7 +67,7 @@ def get_recommendation(answers: dict) -> str:
         bases = [b for b in bases if int(b['price_range']) <= max_price]
         rubbers = [r for r in rubbers if int(r['price_range']) <= max_price]
 
-    # Вес (если выбран)
+    # Вес
     weight_pref = answers.get('weight', 'weight_any')
     if 'light' in weight_pref:
         bases = [b for b in bases if int(b.get('weight', 0)) <= 80]
@@ -65,11 +76,10 @@ def get_recommendation(answers: dict) -> str:
     elif 'heavy' in weight_pref:
         bases = [b for b in bases if int(b.get('weight', 0)) >= 90]
 
-    # Формируем результат
     if not bases:
         return "К сожалению, не удалось подобрать основание под ваши параметры. Попробуйте смягчить требования."
     if not rubbers:
-        rubbers = [r for r in rackets_data if r['type'] == 'rubber']  # fallback
+        rubbers = [r for r in rackets_data if r['type'] == 'rubber']
 
     base = bases[0]
     fh_rub = rubbers[0]
